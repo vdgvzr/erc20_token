@@ -5,8 +5,9 @@ pragma abicoder v2;
 
 import "../node_modules/@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
+import "../node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Token is ERC20PresetMinterPauser, Ownable {
+contract Token is ERC20PresetMinterPauser, Ownable, ReentrancyGuard {
     uint256 private _cap;
     bytes32 public constant CAPPER_ROLE = keccak256("CAPPER_ROLE");
 
@@ -23,12 +24,12 @@ contract Token is ERC20PresetMinterPauser, Ownable {
         return _cap; 
     }
 
-    function changeCap(uint256 _newCap) public virtual {
+    function changeCap(uint256 _newCap) public virtual nonReentrant() {
         require(hasRole(CAPPER_ROLE, _msgSender()), "Token: must have capper role to set new cap");
         _cap = _newCap;
     }
 
-    function _mint(address account, uint256 amount) internal virtual override {
+    function _mint(address account, uint256 amount) internal virtual nonReentrant() override {
         require(ERC20.totalSupply() + amount <= cap(), "ERC20Capped: cap exceeded");
         super._mint(account, amount);
     }
